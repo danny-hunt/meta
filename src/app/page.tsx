@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 export default function Home() {
   const [input, setInput] = useState('');
@@ -8,6 +9,73 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [submissionType, setSubmissionType] = useState<'implement' | 'kanban'>('implement');
+  const [logs, setLogs] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of logs
+  const scrollToBottom = () => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [logs]);
+
+  // WebSocket connection management
+  useEffect(() => {
+    if (webhookUrl) {
+      // Extract base URL from webhook URL
+      const baseUrl = webhookUrl.replace('/webhook', '');
+      
+      // Disconnect existing socket
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+
+      // Create new socket connection
+      socketRef.current = io(baseUrl, {
+        transports: ['websocket', 'polling']
+      });
+
+      socketRef.current.on('connect', () => {
+        setIsConnected(true);
+        setLogs(prev => [...prev, '🔗 Connected to server']);
+      });
+
+      socketRef.current.on('disconnect', () => {
+        setIsConnected(false);
+        setLogs(prev => [...prev, '❌ Disconnected from server']);
+      });
+
+      socketRef.current.on('cursor_agent_start', (data) => {
+        setIsProcessing(true);
+        setLogs(prev => [...prev, `🚀 ${data.message}`]);
+      });
+
+      socketRef.current.on('cursor_agent_output', (data) => {
+        setLogs(prev => [...prev, data.line]);
+      });
+
+      socketRef.current.on('cursor_agent_complete', (data) => {
+        setIsProcessing(false);
+        setLogs(prev => [...prev, `✅ Process completed with exit code: ${data.returncode}`]);
+      });
+
+      socketRef.current.on('cursor_agent_error', (data) => {
+        setIsProcessing(false);
+        setLogs(prev => [...prev, `❌ Error: ${data.error}`]);
+      });
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+      };
+    }
+  }, [webhookUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +92,7 @@ export default function Home() {
 
     setIsSubmitting(true);
     setMessage('');
+    setLogs([]); // Clear previous logs
 
     try {
       const response = await fetch(`${webhookUrl}/webhook`, {
@@ -145,6 +214,32 @@ export default function Home() {
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}>
             {message}
+          </div>
+        )}
+
+        {/* Connection Status */}
+        <div className="flex items-center space-x-2 text-sm">
+          <div className={`w-2 h-2 rounded-full ${
+            isConnected ? 'bg-green-500' : 'bg-red-500'
+          }`}></div>
+          <span className={isConnected ? 'text-green-600' : 'text-red-600'}>
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </span>
+          {isProcessing && (
+            <span className="text-blue-600">• Processing...</span>
+          )}
+        </div>
+
+        {/* Logs Display */}
+        {logs.length > 0 && (
+          <div className="bg-gray-900 text-green-400 p-4 rounded-md font-mono text-sm max-h-96 overflow-y-auto">
+            <div className="text-gray-400 mb-2 text-xs">Cursor Agent Output:</div>
+            {logs.map((log, index) => (
+              <div key={index} className="mb-1">
+                {log}
+              </div>
+            ))}
+            <div ref={logsEndRef} />
           </div>
         )}
 

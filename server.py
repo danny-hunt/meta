@@ -8,20 +8,27 @@ import os
 import json
 import subprocess
 import threading
+import queue
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 import pyngrok.ngrok as ngrok
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for Next.js app
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Global variable to store ngrok URL
 ngrok_url = None
 
+# Global queue for log messages
+log_queue = queue.Queue()
+
 def run_cursor_agent(message, submission_type='implement'):
     """
     Run cursor-agent with the provided message and instructions based on submission type.
+    Streams output in real-time via WebSocket.
     """
     try:
         # Create a comprehensive prompt for cursor-agent based on submission type
@@ -45,31 +52,59 @@ Please add this task to the `meta` vibe-kanban project You have the relevant MCP
 The project id is f65047cc-a6fa-4472-b6b4-0e8376e8324d
 """
         
-        # Run cursor-agent with the prompt
+        # Emit start message
+        socketio.emit('cursor_agent_start', {
+            'message': 'Starting cursor-agent...',
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Run cursor-agent with streaming output
         # Note: Adjust the command based on how cursor-agent is installed/configured
-        result = subprocess.run(
+        process = subprocess.Popen(
             ['cursor-agent', full_prompt],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=300  # 5 minute timeout
+            bufsize=1,
+            universal_newlines=True
         )
         
+        stdout_lines = []
+        
+        # Stream output in real-time
+        for line in iter(process.stdout.readline, ''):
+            if line:
+                stdout_lines.append(line)
+                # Emit each line via WebSocket
+                socketio.emit('cursor_agent_output', {
+                    'line': line.rstrip(),
+                    'timestamp': datetime.now().isoformat()
+                })
+        
+        # Wait for process to complete
+        returncode = process.wait()
+        
+        # Emit completion message
+        socketio.emit('cursor_agent_complete', {
+            'success': returncode == 0,
+            'returncode': returncode,
+            'timestamp': datetime.now().isoformat()
+        })
+        
         return {
-            'success': result.returncode == 0,
-            'stdout': result.stdout,
-            'stderr': result.stderr,
-            'returncode': result.returncode
+            'success': returncode == 0,
+            'stdout': ''.join(stdout_lines),
+            'stderr': '',
+            'returncode': returncode
         }
         
-    except subprocess.TimeoutExpired:
-        return {
-            'success': False,
-            'error': 'cursor-agent timed out after 5 minutes',
-            'stdout': '',
-            'stderr': '',
-            'returncode': -1
-        }
     except Exception as e:
+        # Emit error message
+        socketio.emit('cursor_agent_error', {
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        })
+        
         return {
             'success': False,
             'error': str(e),
@@ -183,7 +218,7 @@ if __name__ == '__main__':
             print(f"Public URL: {ngrok_url}")
             print(f"Webhook endpoint: {ngrok_url}/webhook")
         
-        app.run(host='0.0.0.0', port=5001, debug=True, use_reloader=False)
+        socketio.run(app, host='0.0.0.0', port=5001, debug=True, use_reloader=False, allow_unsafe_werkzeug=True)
         
     except KeyboardInterrupt:
         print("\nShutting down server...")
