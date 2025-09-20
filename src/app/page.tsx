@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useState, useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 
 export default function Home() {
-  const [input, setInput] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState('');
+  const [input, setInput] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [submissionType, setSubmissionType] = useState<'implement' | 'kanban'>('implement');
+  const [message, setMessage] = useState("");
+  const [submissionType, setSubmissionType] = useState<"implement" | "kanban">("implement");
   const [logs, setLogs] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -17,7 +17,7 @@ export default function Home() {
 
   // Auto-scroll to bottom of logs
   const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -28,8 +28,8 @@ export default function Home() {
   useEffect(() => {
     if (webhookUrl) {
       // Extract base URL from webhook URL
-      const baseUrl = webhookUrl.replace('/webhook', '');
-      
+      const baseUrl = webhookUrl.replace("/webhook", "");
+
       // Disconnect existing socket
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -37,36 +37,36 @@ export default function Home() {
 
       // Create new socket connection
       socketRef.current = io(baseUrl, {
-        transports: ['websocket', 'polling']
+        transports: ["websocket", "polling"],
       });
 
-      socketRef.current.on('connect', () => {
+      socketRef.current.on("connect", () => {
         setIsConnected(true);
-        setLogs(prev => [...prev, '🔗 Connected to server']);
+        setLogs((prev) => [...prev, "🔗 Connected to server"]);
       });
 
-      socketRef.current.on('disconnect', () => {
+      socketRef.current.on("disconnect", () => {
         setIsConnected(false);
-        setLogs(prev => [...prev, '❌ Disconnected from server']);
+        setLogs((prev) => [...prev, "❌ Disconnected from server"]);
       });
 
-      socketRef.current.on('cursor_agent_start', (data) => {
+      socketRef.current.on("cursor_agent_start", (data) => {
         setIsProcessing(true);
-        setLogs(prev => [...prev, `🚀 ${data.message}`]);
+        setLogs((prev) => [...prev, `🚀 ${data.message}`]);
       });
 
-      socketRef.current.on('cursor_agent_output', (data) => {
-        setLogs(prev => [...prev, data.line]);
+      socketRef.current.on("cursor_agent_output", (data) => {
+        setLogs((prev) => [...prev, data.line]);
       });
 
-      socketRef.current.on('cursor_agent_complete', (data) => {
+      socketRef.current.on("cursor_agent_complete", (data) => {
         setIsProcessing(false);
-        setLogs(prev => [...prev, `✅ Process completed with exit code: ${data.returncode}`]);
+        setLogs((prev) => [...prev, `✅ Process completed with exit code: ${data.returncode}`]);
       });
 
-      socketRef.current.on('cursor_agent_error', (data) => {
+      socketRef.current.on("cursor_agent_error", (data) => {
         setIsProcessing(false);
-        setLogs(prev => [...prev, `❌ Error: ${data.error}`]);
+        setLogs((prev) => [...prev, `❌ Error: ${data.error}`]);
       });
 
       return () => {
@@ -79,26 +79,26 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!input.trim()) {
-      setMessage('Please enter some text');
+      setMessage("Please enter some text");
       return;
     }
 
     if (!webhookUrl.trim()) {
-      setMessage('Please enter the webhook URL');
+      setMessage("Please enter the webhook URL");
       return;
     }
 
     setIsSubmitting(true);
-    setMessage('');
+    setMessage("");
     setLogs([]); // Clear previous logs
 
     try {
       const response = await fetch(`${webhookUrl}/webhook`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: input,
@@ -109,148 +109,176 @@ export default function Home() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage('✅ Message sent successfully! Processing started.');
-        setInput('');
+        setMessage("✅ Message sent successfully! Processing started.");
+        setInput("");
       } else {
-        setMessage(`❌ Error: ${data.error || 'Unknown error'}`);
+        setMessage(`❌ Error: ${data.error || "Unknown error"}`);
       }
     } catch (error) {
-      setMessage(`❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(`❌ Network error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Cursor Agent Interface
-          </h1>
-          <p className="text-gray-600">
-            Enter your request and webhook URL to send it to cursor-agent
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="webhook-url" className="block text-sm font-medium text-gray-700 mb-1">
-              Webhook URL
-            </label>
-            <input
-              id="webhook-url"
-              type="url"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://your-ngrok-url.ngrok.io"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
+    <div className="min-h-screen bg-white flex">
+      {/* Left Panel - Placeholder Content */}
+      <div className="flex-1 bg-gray-50 p-8 flex flex-col justify-center items-center">
+        <div className="max-w-2xl text-center space-y-6">
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold text-gray-900">Cursor Agent Interface</h1>
+            <p className="text-xl text-gray-600">Streamline your development workflow with AI-powered assistance</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Submission Type
-            </label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="submissionType"
-                  value="implement"
-                  checked={submissionType === 'implement'}
-                  onChange={(e) => setSubmissionType(e.target.value as 'implement' | 'kanban')}
-                  className="mr-3 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Send to cursor-agent to implement
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="submissionType"
-                  value="kanban"
-                  checked={submissionType === 'kanban'}
-                  onChange={(e) => setSubmissionType(e.target.value as 'implement' | 'kanban')}
-                  className="mr-3 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Send to cursor-agent to add to vibe-kanban (and start)
-                </span>
-              </label>
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to Your Development Hub</h2>
+            <p className="text-gray-600 mb-4">
+              This interface connects you with powerful AI agents to help implement features, manage tasks, and
+              streamline your development process.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">🚀 Implementation</h3>
+                <p className="text-sm text-gray-600">
+                  Send requests directly to cursor-agent for immediate implementation
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">📋 Task Management</h3>
+                <p className="text-sm text-gray-600">Add tasks to your kanban board and track progress automatically</p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">🔗 Real-time Updates</h3>
+                <p className="text-sm text-gray-600">Monitor progress with live WebSocket connections and logs</p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-800">⚡ Fast Processing</h3>
+                <p className="text-sm text-gray-600">Get instant feedback and see results as they happen</p>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-              Your Request
-            </label>
-            <textarea
-              id="message"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe what you want cursor-agent to do..."
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              required
-            />
+          <div className="text-sm text-gray-500">
+            <p>Ready to get started? Use the controls on the right to begin.</p>
           </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-{isSubmitting ? 'Sending...' : submissionType === 'implement' ? 'Send to Cursor Agent (Implement)' : 'Send to Cursor Agent (Add to Kanban)'}
-          </button>
-        </form>
-
-        {message && (
-          <div className={`p-3 rounded-md ${
-            message.startsWith('✅') 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {message}
-          </div>
-        )}
-
-        {/* Connection Status */}
-        <div className="flex items-center space-x-2 text-sm">
-          <div className={`w-2 h-2 rounded-full ${
-            isConnected ? 'bg-green-500' : 'bg-red-500'
-          }`}></div>
-          <span className={isConnected ? 'text-green-600' : 'text-red-600'}>
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </span>
-          {isProcessing && (
-            <span className="text-blue-600">• Processing...</span>
-          )}
         </div>
+      </div>
 
-        {/* Logs Display */}
-        {logs.length > 0 && (
-          <div className="bg-gray-900 text-green-400 p-4 rounded-md font-mono text-sm max-h-96 overflow-y-auto">
-            <div className="text-gray-400 mb-2 text-xs">Cursor Agent Output:</div>
-            {logs.map((log, index) => (
-              <div key={index} className="mb-1">
-                {log}
-              </div>
-            ))}
-            <div ref={logsEndRef} />
+      {/* Right Panel - User Controls */}
+      <div className="w-96 bg-white border-l border-gray-200 p-6 overflow-y-auto">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Control Panel</h2>
+            <p className="text-sm text-gray-600">Configure and send your requests</p>
           </div>
-        )}
 
-        <div className="text-xs text-gray-500 space-y-1">
-          <p><strong>Instructions:</strong></p>
-          <ol className="list-decimal list-inside space-y-1 ml-2">
-            <li>Run the Python server: <code className="bg-gray-100 px-1 rounded">python server.py</code></li>
-            <li>Copy the ngrok URL from the server output</li>
-            <li>Paste it in the Webhook URL field above</li>
-            <li>Enter your request and submit</li>
-          </ol>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="webhook-url" className="block text-sm font-medium text-gray-700 mb-1">
+                Webhook URL
+              </label>
+              <input
+                id="webhook-url"
+                type="url"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://your-ngrok-url.ngrok.io"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Submission Type</label>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="submissionType"
+                    value="implement"
+                    checked={submissionType === "implement"}
+                    onChange={(e) => setSubmissionType(e.target.value as "implement" | "kanban")}
+                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Implement directly</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="submissionType"
+                    value="kanban"
+                    checked={submissionType === "kanban"}
+                    onChange={(e) => setSubmissionType(e.target.value as "implement" | "kanban")}
+                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Add to kanban</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                Your Request
+              </label>
+              <textarea
+                id="message"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Describe what you want cursor-agent to do..."
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {isSubmitting
+                ? "Sending..."
+                : submissionType === "implement"
+                ? "Send to Cursor Agent (Implement)"
+                : "Send to Cursor Agent (Add to Kanban)"}
+            </button>
+          </form>
+
+          {message && (
+            <div
+              className={`p-3 rounded-md text-sm ${
+                message.startsWith("✅")
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          {/* Connection Status */}
+          <div className="flex items-center space-x-2 text-sm">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+            <span className={isConnected ? "text-green-600" : "text-red-600"}>
+              {isConnected ? "Connected" : "Disconnected"}
+            </span>
+            {isProcessing && <span className="text-blue-600">• Processing...</span>}
+          </div>
+
+          {/* Logs Display */}
+          {logs.length > 0 && (
+            <div className="bg-gray-900 text-green-400 p-3 rounded-md font-mono text-xs max-h-64 overflow-y-auto">
+              <div className="text-gray-400 mb-2 text-xs">Cursor Agent Output:</div>
+              {logs.map((log, index) => (
+                <div key={index} className="mb-1">
+                  {log}
+                </div>
+              ))}
+              <div ref={logsEndRef} />
+            </div>
+          )}
         </div>
       </div>
     </div>
