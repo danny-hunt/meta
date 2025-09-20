@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import VoiceCommand from "../components/VoiceCommand";
+import CatFacts from "@/components/CatFacts";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -11,7 +12,7 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [submissionType, setSubmissionType] = useState<"implement" | "kanban">("implement");
   const [logs, setLogs] = useState<string[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -139,8 +140,8 @@ export default function Home() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Ingredients & Instructions</h2>
             <p className="text-gray-600 mb-4">
-              This classic spaghetti recipe combines simple ingredients to create a comforting and flavorful dish
-              that's perfect for any occasion.
+              This classic spaghetti recipe combines simple ingredients to create a comforting and flavorful dish that's
+              perfect for any occasion.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -156,7 +157,9 @@ export default function Home() {
               </div>
               <div className="space-y-2">
                 <h3 className="font-semibold text-gray-800">🔥 Cooking Steps</h3>
-                <p className="text-sm text-gray-600">Brown meat, sauté onions & garlic, add tomatoes, simmer 30 minutes</p>
+                <p className="text-sm text-gray-600">
+                  Brown meat, sauté onions & garlic, add tomatoes, simmer 30 minutes
+                </p>
               </div>
               <div className="space-y-2">
                 <h3 className="font-semibold text-gray-800">⏱️ Total Time</h3>
@@ -168,6 +171,11 @@ export default function Home() {
           <div className="text-sm text-gray-500">
             <p>Buon appetito! Enjoy this classic Italian-American comfort food.</p>
           </div>
+
+          {/* Cat Facts Section */}
+          {/* <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 pt-4 p-4 rounded-lg">
+            <CatFacts />
+          </div> */}
         </div>
       </div>
 
@@ -241,10 +249,7 @@ export default function Home() {
             {/* Voice Command Section */}
             <div className="border-t border-gray-200 pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">🎤 Voice Commands</h3>
-              <VoiceCommand 
-                onTranscript={handleVoiceTranscript}
-                disabled={isSubmitting || isProcessing}
-              />
+              <VoiceCommand onTranscript={handleVoiceTranscript} disabled={isSubmitting || isProcessing} />
             </div>
 
             <button
