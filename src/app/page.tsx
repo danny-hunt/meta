@@ -7,6 +7,7 @@ export default function Home() {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [submissionType, setSubmissionType] = useState<'implement' | 'kanban'>('implement');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +33,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           message: input,
+          submissionType: submissionType,
         }),
       });
 
@@ -79,6 +81,40 @@ export default function Home() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Submission Type
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="submissionType"
+                  value="implement"
+                  checked={submissionType === 'implement'}
+                  onChange={(e) => setSubmissionType(e.target.value as 'implement' | 'kanban')}
+                  className="mr-3 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Send to cursor-agent to implement
+                </span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="submissionType"
+                  value="kanban"
+                  checked={submissionType === 'kanban'}
+                  onChange={(e) => setSubmissionType(e.target.value as 'implement' | 'kanban')}
+                  className="mr-3 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Send to cursor-agent to add to vibe-kanban (and start)
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div>
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
               Your Request
             </label>
@@ -98,7 +134,7 @@ export default function Home() {
             disabled={isSubmitting}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Sending...' : 'Send to Cursor Agent'}
+{isSubmitting ? 'Sending...' : submissionType === 'implement' ? 'Send to Cursor Agent (Implement)' : 'Send to Cursor Agent (Add to Kanban)'}
           </button>
         </form>
 

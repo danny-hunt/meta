@@ -19,13 +19,14 @@ CORS(app)  # Enable CORS for Next.js app
 # Global variable to store ngrok URL
 ngrok_url = None
 
-def run_cursor_agent(message):
+def run_cursor_agent(message, submission_type='implement'):
     """
-    Run cursor-agent with the provided message and instructions to commit/push changes.
+    Run cursor-agent with the provided message and instructions based on submission type.
     """
     try:
-        # Create a comprehensive prompt for cursor-agent
-        full_prompt = f"""
+        # Create a comprehensive prompt for cursor-agent based on submission type
+        if submission_type == 'implement':
+            full_prompt = f"""
 {message}
 
 Please make the necessary changes as specified above. When you're done making changes:
@@ -33,6 +34,19 @@ Please make the necessary changes as specified above. When you're done making ch
 2. Push the changes to the main branch
 
 This will trigger a redeployment on Vercel.
+"""
+        else:  # submission_type == 'kanban'
+            full_prompt = f"""
+{message}
+
+Please add this task to the vibe-kanban project and start working on it. Cursor-agent has the relevant MCP server details to interact with the kanban system.
+
+When you're done:
+1. Add the task to the kanban board
+2. Start working on the implementation
+3. Commit and push any changes made
+
+This will integrate the task into the kanban workflow.
 """
         
         # Run cursor-agent with the prompt
@@ -92,11 +106,13 @@ def webhook():
             }), 400
         
         message = data['message']
+        submission_type = data.get('submissionType', 'implement')
         print(f"Received message: {message}")
+        print(f"Submission type: {submission_type}")
         
         # Run cursor-agent in a separate thread to avoid blocking
         def process_message():
-            result = run_cursor_agent(message)
+            result = run_cursor_agent(message, submission_type)
             print(f"cursor-agent result: {result}")
         
         thread = threading.Thread(target=process_message)
