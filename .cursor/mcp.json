@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cat-facts": {
+      "command": "node",
+      "args": ["/Users/danny/src/cat-facts/dist/index.js"]
+    },
+    "vibe_kanban": {
+      "command": "npx",
+      "args": ["-y", "vibe-kanban", "--mcp"]
+    }
+  }
+}

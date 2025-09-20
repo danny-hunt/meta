@@ -37,16 +37,12 @@ This will trigger a redeployment on Vercel.
 """
         else:  # submission_type == 'kanban'
             full_prompt = f"""
+
+Here is a request for changes to a webapp:
 {message}
 
-Please add this task to the vibe-kanban project and start working on it. Cursor-agent has the relevant MCP server details to interact with the kanban system.
-
-When you're done:
-1. Add the task to the kanban board
-2. Start working on the implementation
-3. Commit and push any changes made
-
-This will integrate the task into the kanban workflow.
+Please add this task to the `meta` vibe-kanban project You have the relevant MCP server details to interact with the kanban system. 
+The project id is f65047cc-a6fa-4472-b6b4-0e8376e8324d
 """
         
         # Run cursor-agent with the prompt
