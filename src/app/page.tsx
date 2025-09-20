@@ -14,6 +14,13 @@ export default function Home() {
   const [logs, setLogs] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showElevenLabs, setShowElevenLabs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('showElevenLabs');
+      return saved ? JSON.parse(saved) : true; // Default to true (show by default)
+    }
+    return true;
+  });
   const socketRef = useRef<Socket | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -81,6 +88,11 @@ export default function Home() {
 
   const handleVoiceTranscript = (transcript: string) => {
     setInput(transcript);
+  };
+
+  const handleElevenLabsToggle = (checked: boolean) => {
+    setShowElevenLabs(checked);
+    localStorage.setItem('showElevenLabs', JSON.stringify(checked));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -232,6 +244,21 @@ export default function Home() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Settings</label>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={showElevenLabs}
+                    onChange={(e) => handleElevenLabsToggle(e.target.checked)}
+                    className="mr-2 text-blue-600 focus:ring-blue-500 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Show ElevenLabs Voice Commands</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                 Your Request
               </label>
@@ -247,10 +274,12 @@ export default function Home() {
             </div>
 
             {/* Voice Command Section */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">🎤 Voice Commands</h3>
-              <VoiceCommand onTranscript={handleVoiceTranscript} disabled={isSubmitting || isProcessing} />
-            </div>
+            {showElevenLabs && (
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">🎤 Voice Commands</h3>
+                <VoiceCommand onTranscript={handleVoiceTranscript} disabled={isSubmitting || isProcessing} />
+              </div>
+            )}
 
             <button
               type="submit"
