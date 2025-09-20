@@ -62,11 +62,25 @@ export class ElevenLabsSTT {
 
 // Utility function to check if ElevenLabs API key is available
 export function hasElevenLabsKey(): boolean {
+  // First check environment variable (server-side or client-side with Next.js)
+  const envKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+  if (envKey && envKey !== 'your_elevenlabs_api_key_here') {
+    return true;
+  }
+  
+  // Fallback to localStorage for client-side
   return typeof window !== 'undefined' && !!localStorage.getItem('elevenlabs_api_key');
 }
 
-// Utility function to get ElevenLabs API key from localStorage
+// Utility function to get ElevenLabs API key from environment or localStorage
 export function getElevenLabsKey(): string | null {
+  // First check environment variable (server-side or client-side with Next.js)
+  const envKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+  if (envKey && envKey !== 'your_elevenlabs_api_key_here') {
+    return envKey;
+  }
+  
+  // Fallback to localStorage for client-side
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('elevenlabs_api_key');
 }

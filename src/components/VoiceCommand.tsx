@@ -10,6 +10,12 @@ export default function VoiceCommand({ onTranscript, disabled = false }: VoiceCo
   const [apiKey, setApiKey] = useState(getElevenLabsKey() || '');
   const [isApiKeyValid, setIsApiKeyValid] = useState(hasElevenLabsKey());
   
+  // Check if API key is from environment variables
+  const isEnvKey = () => {
+    const envKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY;
+    return envKey && envKey !== 'your_elevenlabs_api_key_here';
+  };
+  
   const {
     isRecording,
     isProcessing,
@@ -61,7 +67,7 @@ export default function VoiceCommand({ onTranscript, disabled = false }: VoiceCo
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${isApiKeyValid ? 'bg-green-500' : 'bg-gray-400'}`}></div>
             <span className={isApiKeyValid ? 'text-green-600' : 'text-gray-500'}>
-              {isApiKeyValid ? 'Configured' : 'Not Set'}
+              {isApiKeyValid ? (isEnvKey() ? 'From .env' : 'Configured') : 'Not Set'}
             </span>
           </div>
         </div>
@@ -176,7 +182,9 @@ export default function VoiceCommand({ onTranscript, disabled = false }: VoiceCo
 
       {/* Help Text */}
       <div className="text-xs text-gray-500">
-        <p>💡 <strong>Tip:</strong> {isApiKeyValid ? 'Using ElevenLabs for high-quality transcription' : 'Using browser speech recognition (add API key for better accuracy)'}</p>
+        <p>💡 <strong>Tip:</strong> {isApiKeyValid ? 
+          (isEnvKey() ? 'Using ElevenLabs API key from .env file' : 'Using ElevenLabs for high-quality transcription') : 
+          'Using browser speech recognition (add API key for better accuracy)'}</p>
       </div>
     </div>
   );
