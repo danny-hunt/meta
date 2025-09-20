@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import VoiceCommand from "../components/VoiceCommand";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -76,6 +77,10 @@ export default function Home() {
       };
     }
   }, [webhookUrl]);
+
+  const handleVoiceTranscript = (transcript: string) => {
+    setInput(transcript);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,6 +235,15 @@ export default function Home() {
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                 required
+              />
+            </div>
+
+            {/* Voice Command Section */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">🎤 Voice Commands</h3>
+              <VoiceCommand 
+                onTranscript={handleVoiceTranscript}
+                disabled={isSubmitting || isProcessing}
               />
             </div>
 

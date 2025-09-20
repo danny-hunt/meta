@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.15.0",
+    "mic-recorder-to-mp3": "^2.2.2",
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
