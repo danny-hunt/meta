@@ -9,11 +9,17 @@ import json
 import subprocess
 import threading
 import queue
+import asyncio
 from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import pyngrok.ngrok as ngrok
+from dedalus_labs import AsyncDedalus, DedalusRunner
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for Next.js app
@@ -193,6 +199,55 @@ def status():
         'ngrok_url': ngrok_url,
         'timestamp': datetime.now().isoformat()
     })
+
+async def get_cat_fact():
+    """Get a cat fact using the dedalus-labs MCP server integration."""
+    try:
+        client = AsyncDedalus()
+        runner = DedalusRunner(client)
+
+        result = await runner.run(
+            input="Give me a cat fact, specifically using the mcp server you've been provided",
+            model="openai/gpt-4o-mini",
+            mcp_servers=[
+                "danny/cat-facts", 
+            ],
+            stream=False,
+            verbose=True,
+            debug=True,
+        )
+        
+        return {
+            'success': True,
+            'cat_fact': result.final_output,
+            'timestamp': datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }
+
+@app.route('/cat-facts', methods=['GET'])
+def cat_facts():
+    """Get a cat fact using MCP server integration."""
+    try:
+        # Run the async function in a new event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(get_cat_fact())
+            return jsonify(result)
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 def setup_ngrok():
     """Set up ngrok tunnel."""
