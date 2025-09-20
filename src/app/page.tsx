@@ -250,20 +250,6 @@ export default function Home() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Settings</label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={showElevenLabs}
-                    onChange={(e) => handleElevenLabsToggle(e.target.checked)}
-                    className="mr-2 text-blue-600 focus:ring-blue-500 rounded"
-                  />
-                  <span className="text-sm text-gray-700">Show ElevenLabs Voice Commands</span>
-                </label>
-              </div>
-            </div>
 
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
@@ -334,6 +320,19 @@ export default function Home() {
               <div ref={logsEndRef} />
             </div>
           )}
+
+          {/* ElevenLabs Voice Commands Toggle */}
+          <div className="border-t border-gray-200 pt-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={showElevenLabs}
+                onChange={(e) => handleElevenLabsToggle(e.target.checked)}
+                className="mr-2 text-blue-600 focus:ring-blue-500 rounded"
+              />
+              <span className="text-sm text-gray-700">Show ElevenLabs Voice Commands</span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
