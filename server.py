@@ -28,7 +28,8 @@ log_queue = queue.Queue()
 def run_cursor_agent(message, submission_type='implement'):
     """
     Run cursor-agent with the provided message and instructions based on submission type.
-    Streams output in real-time via WebSocket.
+    Streams output in real-time via WebSocket for 'implement' requests.
+    For 'kanban' requests, runs without streaming.
     """
     try:
         # Create a comprehensive prompt for cursor-agent based on submission type
@@ -58,38 +59,59 @@ The project id is f65047cc-a6fa-4472-b6b4-0e8376e8324d
             'timestamp': datetime.now().isoformat()
         })
         
-        # Run cursor-agent with streaming output
-        # Note: Adjust the command based on how cursor-agent is installed/configured
-        process = subprocess.Popen(
-            ['cursor-agent', full_prompt],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
+        # Run cursor-agent with different behavior based on submission type
+        if submission_type == 'implement':
+            # For implement requests, use streaming output
+            process = subprocess.Popen(
+                ['cursor-agent', full_prompt],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            stdout_lines = []
+            
+            # Stream output in real-time
+            for line in iter(process.stdout.readline, ''):
+                if line:
+                    stdout_lines.append(line)
+                    # Emit each line via WebSocket
+                    socketio.emit('cursor_agent_output', {
+                        'line': line.rstrip(),
+                        'timestamp': datetime.now().isoformat()
+                    })
+            
+            # Wait for process to complete
+            returncode = process.wait()
+            
+        else:  # submission_type == 'kanban'
+            # For kanban requests, run without streaming
+            result = subprocess.run(
+                ['cursor-agent', full_prompt],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
+            
+            stdout_lines = [result.stdout] if result.stdout else []
+            returncode = result.returncode
+            
+            # Emit completion message immediately for kanban requests
+            socketio.emit('cursor_agent_complete', {
+                'success': returncode == 0,
+                'returncode': returncode,
+                'timestamp': datetime.now().isoformat()
+            })
         
-        stdout_lines = []
-        
-        # Stream output in real-time
-        for line in iter(process.stdout.readline, ''):
-            if line:
-                stdout_lines.append(line)
-                # Emit each line via WebSocket
-                socketio.emit('cursor_agent_output', {
-                    'line': line.rstrip(),
-                    'timestamp': datetime.now().isoformat()
-                })
-        
-        # Wait for process to complete
-        returncode = process.wait()
-        
-        # Emit completion message
-        socketio.emit('cursor_agent_complete', {
-            'success': returncode == 0,
-            'returncode': returncode,
-            'timestamp': datetime.now().isoformat()
-        })
+        # Emit completion message for implement requests
+        if submission_type == 'implement':
+            socketio.emit('cursor_agent_complete', {
+                'success': returncode == 0,
+                'returncode': returncode,
+                'timestamp': datetime.now().isoformat()
+            })
         
         return {
             'success': returncode == 0,
