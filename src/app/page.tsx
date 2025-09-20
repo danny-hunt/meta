@@ -127,41 +127,41 @@ export default function Home() {
       <div className="flex-1 bg-gray-50 p-8 flex flex-col justify-center items-center">
         <div className="max-w-2xl text-center space-y-6">
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold text-gray-900">Cursor Agent Interface</h1>
-            <p className="text-xl text-gray-600">Streamline your development workflow with AI-powered assistance</p>
+            <h1 className="text-4xl font-bold text-gray-900">Classic Spaghetti Recipe</h1>
+            <p className="text-xl text-gray-600">A delicious homemade spaghetti that will satisfy your cravings</p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to Your Development Hub</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Ingredients & Instructions</h2>
             <p className="text-gray-600 mb-4">
-              This interface connects you with powerful AI agents to help implement features, manage tasks, and
-              streamline your development process.
+              This classic spaghetti recipe combines simple ingredients to create a comforting and flavorful dish
+              that's perfect for any occasion.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
               <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">🚀 Implementation</h3>
+                <h3 className="font-semibold text-gray-800">🍝 Ingredients</h3>
                 <p className="text-sm text-gray-600">
-                  Send requests directly to cursor-agent for immediate implementation
+                  1 lb spaghetti, 1 lb ground beef, 1 onion, 3 cloves garlic, 2 cans crushed tomatoes
                 </p>
               </div>
               <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">📋 Task Management</h3>
-                <p className="text-sm text-gray-600">Add tasks to your kanban board and track progress automatically</p>
+                <h3 className="font-semibold text-gray-800">🧄 Seasonings</h3>
+                <p className="text-sm text-gray-600">Salt, pepper, oregano, basil, red pepper flakes, olive oil</p>
               </div>
               <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">🔗 Real-time Updates</h3>
-                <p className="text-sm text-gray-600">Monitor progress with live WebSocket connections and logs</p>
+                <h3 className="font-semibold text-gray-800">🔥 Cooking Steps</h3>
+                <p className="text-sm text-gray-600">Brown meat, sauté onions & garlic, add tomatoes, simmer 30 minutes</p>
               </div>
               <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">⚡ Fast Processing</h3>
-                <p className="text-sm text-gray-600">Get instant feedback and see results as they happen</p>
+                <h3 className="font-semibold text-gray-800">⏱️ Total Time</h3>
+                <p className="text-sm text-gray-600">45 minutes prep to plate - perfect for weeknight dinners</p>
               </div>
             </div>
           </div>
 
           <div className="text-sm text-gray-500">
-            <p>Ready to get started? Use the controls on the right to begin.</p>
+            <p>Buon appetito! Enjoy this classic Italian-American comfort food.</p>
           </div>
         </div>
       </div>
