@@ -136,7 +136,7 @@ def setup_ngrok():
             ngrok.set_auth_token(auth_token)
         
         # Create ngrok tunnel
-        tunnel = ngrok.connect(5000)  # Flask default port
+        tunnel = ngrok.connect(5001)  # Flask default port
         ngrok_url = tunnel.public_url
         
         print(f"ngrok tunnel created: {ngrok_url}")
@@ -148,10 +148,10 @@ def setup_ngrok():
         print(f"Error setting up ngrok: {e}")
         return None
 
-def cleanup_ngrok():
+def cleanup_ngrok(public_url: str):
     """Clean up ngrok tunnel on shutdown."""
     try:
-        ngrok.disconnect()
+        ngrok.disconnect(public_url)
         print("ngrok tunnel disconnected")
     except Exception as e:
         print(f"Error disconnecting ngrok: {e}")
@@ -171,9 +171,9 @@ if __name__ == '__main__':
             print(f"Public URL: {ngrok_url}")
             print(f"Webhook endpoint: {ngrok_url}/webhook")
         
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=5001, debug=True, use_reloader=False)
         
     except KeyboardInterrupt:
         print("\nShutting down server...")
     finally:
-        cleanup_ngrok()
+        cleanup_ngrok(ngrok_url)
