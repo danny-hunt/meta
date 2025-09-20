@@ -78,6 +78,19 @@ export default function Home() {
         setLogs((prev) => [...prev, `❌ Error: ${data.error}`]);
       });
 
+      socketRef.current.on("connected", (data) => {
+        setLogs((prev) => [...prev, `✅ ${data.message}`]);
+      });
+
+      socketRef.current.on("processing_started", (data) => {
+        setLogs((prev) => [...prev, `🚀 ${data.message}`]);
+      });
+
+      socketRef.current.on("error", (data) => {
+        setIsProcessing(false);
+        setLogs((prev) => [...prev, `❌ Server Error: ${data.error}`]);
+      });
+
       return () => {
         if (socketRef.current) {
           socketRef.current.disconnect();
@@ -108,30 +121,24 @@ export default function Home() {
       return;
     }
 
+    if (!socketRef.current || !isConnected) {
+      setMessage("❌ Not connected to server. Please check your connection.");
+      return;
+    }
+
     setIsSubmitting(true);
     setMessage("");
     setLogs([]); // Clear previous logs
 
     try {
-      const response = await fetch(`${webhookUrl}/webhook`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: input,
-          submissionType: submissionType,
-        }),
+      // Use Socket.IO to send the processing request
+      socketRef.current.emit('start_processing', {
+        message: input,
+        submissionType: submissionType,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage("✅ Message sent successfully! Processing started.");
-        setInput("");
-      } else {
-        setMessage(`❌ Error: ${data.error || "Unknown error"}`);
-      }
+      setMessage("✅ Message sent successfully! Processing started.");
+      setInput("");
     } catch (error) {
       setMessage(`❌ Network error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
